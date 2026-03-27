@@ -10,6 +10,7 @@ import bz2
 import json
 import logging
 import re
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -170,6 +171,10 @@ def main():
         log.info("Output already exists: %s (delete to reprocess)", output_path)
         return
 
+    # Per-file checkpoint directory
+    parts_dir = output_path.parent / "abstracts_parts"
+    parts_dir.mkdir(exist_ok=True)
+
     # Find XML dump files
     raw_dir = cfg.raw_dir
     xml_files = sorted(raw_dir.glob("enwiki-NS0-*.xml*"))
@@ -186,31 +191,57 @@ def main():
 
     log.info("Found %d XML dump file(s)", len(xml_files))
 
-    # Process all files and collect results
-    articles: dict[str, tuple[str, str]] = {}  # title -> (short, long)
-
+    # Phase 1: process each XML file into its own checkpoint (no cross-file dedup yet)
     for xml_path in xml_files:
-        for title, short_abstract, long_abstract in process_xml_dump(xml_path, cfg):
-            # Deduplicate: keep the first occurrence
-            if title not in articles:
-                articles[title] = (short_abstract, long_abstract)
-
-        if cfg.test_mode and len(articles) >= cfg.test_entries:
+        part_path = parts_dir / (xml_path.name + ".jsonl")
+        if part_path.exists():
+            log.info("Checkpoint exists, skipping: %s", part_path.name)
+            continue
+        part_tmp = part_path.with_suffix(".tmp")
+        count = 0
+        with open(part_tmp, "w", encoding="utf-8") as f:
+            for title, short_abstract, long_abstract in process_xml_dump(xml_path, cfg):
+                f.write(json.dumps(
+                    {"title": title, "short": short_abstract, "long": long_abstract},
+                    ensure_ascii=False,
+                ) + "\n")
+                count += 1
+                if cfg.test_mode and count >= cfg.test_entries:
+                    break
+        part_tmp.rename(part_path)
+        if cfg.test_mode and count >= cfg.test_entries:
             break
 
-    log.info("Total unique articles: %d", len(articles))
+    # Phase 2: merge all checkpoints into a temp file, deduplicating via a title set,
+    # then sort externally to avoid holding all content in memory.
+    log.info("Merging checkpoints into %s ...", output_path)
+    seen: set[str] = set()
+    tmp_unsorted = output_path.with_suffix(".unsorted.tmp")
+    part_files = sorted(parts_dir.glob("*.jsonl"))
+    with open(tmp_unsorted, "w", encoding="utf-8") as out:
+        for part_path in part_files:
+            log.info("  Merging %s", part_path.name)
+            with open(part_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    obj = json.loads(line)
+                    title = obj["title"]
+                    if title not in seen:
+                        seen.add(title)
+                        out.write(title + "\t" + line.rstrip("\n") + "\n")
 
-    # Write sorted by title
-    log.info("Writing to %s ...", output_path)
+    log.info("Total unique articles: %d — sorting...", len(seen))
+    tmp_sorted = output_path.with_suffix(".sorted.tmp")
+    subprocess.run(["sort", "-t\t", "-k1,1", str(tmp_unsorted), "-o", str(tmp_sorted)], check=True)
+    tmp_unsorted.unlink()
+
     tmp_path = output_path.with_suffix(".tmp")
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        for title in sorted(articles.keys()):
-            short, long = articles[title]
-            obj = {"title": title, "short": short, "long": long}
-            f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    with open(tmp_sorted, "r", encoding="utf-8") as inp, open(tmp_path, "w", encoding="utf-8") as out:
+        for line in inp:
+            out.write(line.split("\t", 1)[1])  # line already ends with \n
+    tmp_sorted.unlink()
     tmp_path.rename(output_path)
 
-    log.info("Wrote %d articles to %s", len(articles), output_path)
+    log.info("Wrote %d articles to %s", len(seen), output_path)
 
 
 if __name__ == "__main__":

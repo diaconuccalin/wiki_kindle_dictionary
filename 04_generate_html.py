@@ -87,7 +87,7 @@ def generate_entry(entry: dict) -> str:
     return "\n".join(lines)
 
 
-def generate_opf(content_files: list[str], kindle_dir: Path) -> Path:
+def generate_opf(content_files: list[str], kindle_dir: Path, profile: str = "standard") -> Path:
     """Generate the OPF package file."""
     manifest_items = []
     spine_items = []
@@ -100,7 +100,7 @@ def generate_opf(content_files: list[str], kindle_dir: Path) -> Path:
 
     # Cover
     manifest_items.append(
-        '    <item id="cover" href="cover.jpg" media-type="image/jpeg" />'
+        '    <item id="cover" href="cover.jpg" media-type="image/jpeg" properties="cover-image" />'
     )
 
     # Content files
@@ -115,10 +115,11 @@ def generate_opf(content_files: list[str], kindle_dir: Path) -> Path:
 <?xml version="1.0" encoding="utf-8"?>
 <package unique-identifier="uid">
   <metadata>
-    <dc:title>Wikipedia Dictionary</dc:title>
+    <dc:title>Wikipedia Dictionary ({profile.capitalize()})</dc:title>
     <dc:language>en</dc:language>
     <dc:creator>Wikipedia</dc:creator>
-    <dc:identifier id="uid">wikipedia-kindle-dict-001</dc:identifier>
+    <dc:identifier id="uid">wikipedia-kindle-dict-{profile}</dc:identifier>
+    <meta name="cover" content="cover" />
     <x-metadata>
       <DictionaryInLanguage>en</DictionaryInLanguage>
       <DictionaryOutLanguage>en</DictionaryOutLanguage>
@@ -139,10 +140,31 @@ def generate_opf(content_files: list[str], kindle_dir: Path) -> Path:
     return opf_path
 
 
-def generate_cover(kindle_dir: Path):
+# Maps profile names to cover image filenames (without .png extension).
+# Profiles not listed here use their own name directly.
+PROFILE_COVER_MAP = {
+    "full_breadth":          "complete",
+    "full_encyclopedia_10k": "complete",
+    "full_encyclopedia_50k": "complete",
+    "full_encyclopedia_100k":"complete",
+}
+
+
+def generate_cover(kindle_dir: Path, profile: str = "standard"):
     """Generate a simple cover image."""
     try:
         from PIL import Image, ImageDraw, ImageFont
+
+        # Use profile-specific cover image if available
+        image_name = PROFILE_COVER_MAP.get(profile, profile)
+        cover_src = Path(__file__).parent / "img" / f"{image_name}.png"
+        if cover_src.exists():
+            img = Image.open(cover_src).convert("RGB")
+            cover_path = kindle_dir / "cover.jpg"
+            img.save(cover_path, "JPEG", quality=85)
+            log.info("Generated %s (from %s)", cover_path, cover_src)
+            return
+
         img = Image.new("RGB", (600, 800), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
         # Try to use a default font, fall back to default bitmap font
@@ -236,10 +258,10 @@ def main():
     log.info("Generated %s", attr_path)
 
     # Generate cover
-    generate_cover(kindle_dir)
+    generate_cover(kindle_dir, cfg.profile)
 
     # Generate OPF
-    generate_opf(content_files, kindle_dir)
+    generate_opf(content_files, kindle_dir, cfg.profile)
 
     log.info("Kindle HTML generation complete. Output in %s", kindle_dir)
 

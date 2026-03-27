@@ -57,26 +57,31 @@ def compile_dictionary(cfg: Config):
         cmd.append("-gen_ff_mobi7")
     if cfg.no_source_embed:
         cmd.append("-dont_append_source")
+    cmd.append("-verbose")
     cmd.append(str(opf_path))
 
     log.info("Running: %s", " ".join(cmd))
 
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=7200)
-
-    # KindleGen exit codes: 0 = success, 1 = warnings, 2 = error
-    if result.returncode == 2:
-        log.error("KindleGen failed with errors:")
-        log.error(result.stdout)
-        log.error(result.stderr)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    try:
+        for line in proc.stdout:
+            line = line.rstrip("\n")
+            if line:
+                log.info("  kindlegen: %s", line)
+        proc.wait(timeout=86400)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        log.error("KindleGen timed out after 24 hours")
         return False
 
-    if result.returncode == 1:
-        log.warning("KindleGen completed with warnings (this is normal for dictionaries)")
+    # KindleGen exit codes: 0 = success, 1 = warnings, 2 = error
+    if proc.returncode == 2:
+        log.error("KindleGen failed with errors (see output above)")
+        return False
 
-    if result.stdout:
-        # Log last few lines which contain the summary
-        for line in result.stdout.strip().split("\n")[-10:]:
-            log.info("  kindlegen: %s", line)
+    if proc.returncode == 1:
+        log.warning("KindleGen completed with warnings (this is normal for dictionaries)")
 
     # Find the output .mobi file
     mobi_path = opf_path.with_suffix(".mobi")
