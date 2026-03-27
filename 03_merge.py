@@ -35,48 +35,84 @@ def load_pageviews(path: Path) -> dict[str, int]:
     views = {}
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
-            parts = line.rstrip("\n").split("\t", 1)
+            parts = line.rstrip("\n").rsplit("\t", 1)
             if len(parts) == 2:
-                title, count = parts[0], int(parts[1])
-                views[title] = count
+                try:
+                    title, count = parts[0], int(parts[1])
+                    views[title] = count
+                except ValueError:
+                    pass
     log.info("Loaded %d pageview entries", len(views))
     return views
 
 
-def load_langlinks(path: Path) -> dict[str, dict[str, str]]:
+def load_langlinks(path: Path, needed: set[str] | None = None) -> dict[str, dict[str, str]]:
     """Load langlinks JSONL into {en_title: {lang: foreign_title}} dict."""
     log.info("Loading langlinks from %s ...", path)
     links = {}
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
-            links[obj["en_title"]] = obj["links"]
+            if needed is None or obj["en_title"] in needed:
+                links[obj["en_title"]] = obj["links"]
     log.info("Loaded langlinks for %d articles", len(links))
     return links
 
 
-def load_redirects(path: Path) -> dict[str, list[str]]:
+def load_redirects(path: Path, needed: set[str] | None = None) -> dict[str, list[str]]:
     """Load redirects JSONL into {target_title: [redirect_titles]} dict."""
     log.info("Loading redirects from %s ...", path)
     redirects = {}
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
-            redirects[obj["target_title"]] = obj["redirect_titles"]
+            if needed is None or obj["target_title"] in needed:
+                redirects[obj["target_title"]] = obj["redirect_titles"]
     log.info("Loaded redirects for %d target articles", len(redirects))
     return redirects
 
 
-def load_abstracts(path: Path) -> dict[str, dict]:
-    """Load abstracts JSONL into {title: {short, long}} dict."""
-    log.info("Loading abstracts from %s ...", path)
+def load_abstract_titles(path: Path) -> set[str]:
+    """Stream abstracts JSONL and return just the set of titles (memory-efficient)."""
+    log.info("Scanning abstract titles from %s ...", path)
+    titles = set()
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            obj = json.loads(line)
+            titles.add(obj["title"])
+    log.info("Found %d abstract titles", len(titles))
+    return titles
+
+
+def load_abstracts_filtered(path: Path, needed: set[str]) -> dict[str, dict]:
+    """Stream abstracts JSONL, loading only entries whose title is in `needed`."""
+    log.info("Loading %d needed abstracts from %s ...", len(needed), path)
     abstracts = {}
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
+            if not line.strip():
+                continue
             obj = json.loads(line)
-            abstracts[obj["title"]] = {"short": obj["short"], "long": obj["long"]}
+            if obj["title"] in needed:
+                abstracts[obj["title"]] = {"short": obj["short"], "long": obj["long"]}
     log.info("Loaded %d abstracts", len(abstracts))
     return abstracts
+
+
+def is_kindlegen_safe(text: str) -> bool:
+    """Return True if all characters are in the allowed orth index range.
+
+    Only Latin scripts (U+0000-U+02FF) are indexed. Kana (U+3000-U+30FF) and
+    halfwidth forms (U+FF00-U+FF9F) are also accepted by KindleGen but excluded
+    here intentionally — Japanese katakana lookups are rare and keeping only Latin
+    produces a cleaner, smaller index.
+    """
+    for ch in text:
+        if ord(ch) > 0x02FF:
+            return False
+    return True
 
 
 def is_disambiguation(title: str) -> bool:
@@ -107,28 +143,15 @@ def main():
         return
 
     pageviews = load_pageviews(cfg.pageviews_path)
-    abstracts = load_abstracts(cfg.abstracts_path)
 
-    langlinks = {}
-    if cfg.langlinks_path.exists():
-        langlinks = load_langlinks(cfg.langlinks_path)
-    else:
-        log.warning("Langlinks not found, proceeding without interlanguage links")
-
-    redirects: dict[str, list[str]] = {}
-    if cfg.include_redirects and cfg.redirects_path.exists():
-        redirects = load_redirects(cfg.redirects_path)
-    elif cfg.include_redirects:
-        log.warning("Redirects not found, proceeding without redirect titles")
-
-    # Build set of all English article titles (for collision detection)
-    all_en_titles = set(abstracts.keys())
+    # Pass 1: scan abstract titles only to rank by pageviews (no content loaded)
+    all_en_titles = load_abstract_titles(cfg.abstracts_path)
     log.info("Total articles with abstracts: %d", len(all_en_titles))
 
     # Rank articles by pageviews
     log.info("Ranking articles by pageviews...")
     ranked = []
-    for title in abstracts:
+    for title in all_en_titles:
         if is_disambiguation(title):
             continue
         views = pageviews.get(title, 0)
@@ -137,9 +160,36 @@ def main():
     ranked.sort(key=lambda x: x[1], reverse=True)
     log.info("Ranked %d articles (excluding disambiguation pages)", len(ranked))
 
+    # Determine which titles we actually need (apply total_limit early)
+    total_limit = cfg.total_entries
+    needed_titles = {title for title, _ in (ranked[:total_limit] if total_limit else ranked)}
+    log.info("Loading content for %d needed articles...", len(needed_titles))
+
+    # Pass 2: load only needed abstracts
+    abstracts = load_abstracts_filtered(cfg.abstracts_path, needed_titles)
+
+    redirects: dict[str, list[str]] = {}
+    if cfg.include_redirects and cfg.redirects_path.exists():
+        redirects = load_redirects(cfg.redirects_path, needed_titles)
+    elif cfg.include_redirects:
+        log.warning("Redirects not found, proceeding without redirect titles")
+
+    # Include redirect titles when fetching langlinks: foreign-language Wikipedias
+    # sometimes link to a redirect page rather than the main article, so we need
+    # langlinks for redirect titles too to capture those orth variants.
+    redirect_titles = {redir for redir_list in redirects.values() for redir in redir_list}
+    langlink_titles = needed_titles | redirect_titles
+    log.info("Loading langlinks for %d titles (%d main + %d redirects) ...",
+             len(langlink_titles), len(needed_titles), len(redirect_titles))
+
+    langlinks = {}
+    if cfg.langlinks_path.exists():
+        langlinks = load_langlinks(cfg.langlinks_path, langlink_titles)
+    else:
+        log.warning("Langlinks not found, proceeding without interlanguage links")
+
     # Apply tier thresholds
     long_tier = cfg.long_tier
-    total_limit = cfg.total_entries  # None for full encyclopedia
 
     entries = []
     long_count = 0
@@ -179,17 +229,20 @@ def main():
                     continue
                 # Strip disambiguation suffix
                 cleaned = strip_disambiguation(redir)
-                if cleaned.lower() != title.lower():
+                if cleaned.lower() != title.lower() and is_kindlegen_safe(cleaned):
                     orth_variants.append(cleaned)
 
-        # Add interlanguage link titles
-        if title in langlinks:
-            for lang, foreign_title in langlinks[title].items():
+        # Add interlanguage link titles (from main article and its redirect pages)
+        langlink_sources = [title] + (redirects.get(title, []) if cfg.include_redirects else [])
+        for source in langlink_sources:
+            if source not in langlinks:
+                continue
+            for lang, foreign_title in langlinks[source].items():
                 # Skip if collision with a different English article
                 if foreign_title in all_en_titles and foreign_title != title:
                     skipped_collisions += 1
                     continue
-                if foreign_title.lower() != title.lower():
+                if foreign_title.lower() != title.lower() and is_kindlegen_safe(foreign_title):
                     orth_variants.append(foreign_title)
 
         # Deduplicate and cap
@@ -231,7 +284,7 @@ def main():
     log.info("Skipped title collisions: %d", skipped_collisions)
     log.info("Estimated raw HTML size: %.1f MB", estimated_bytes / 1024 / 1024)
     log.info("Estimated .mobi size (with -c2 -dont_append_source): %.1f MB",
-             estimated_bytes * 0.30 / 1024 / 1024)
+             estimated_bytes * 0.74 / 1024 / 1024)
 
     # Write output
     log.info("Writing %d entries to %s ...", len(entries), output_path)
