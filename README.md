@@ -2,6 +2,8 @@
 
 A Python pipeline that converts Wikipedia dump files into a Kindle-compatible `.mobi` dictionary. When you long-press any word on your Kindle, the dictionary popup shows the English Wikipedia abstract for that topic — including lookups via foreign-language titles (e.g., "București" shows the Bucharest article).
 
+[![Download](https://img.shields.io/github/v/release/diaconuccalin/wiki_kindle_dictionary?label=Download&logo=kindle&style=for-the-badge)](https://github.com/diaconuccalin/wiki_kindle_dictionary/releases/latest)
+
 ## Prerequisites
 
 - **Python 3.10+**
