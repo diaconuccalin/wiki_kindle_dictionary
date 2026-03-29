@@ -6,6 +6,7 @@ A Python pipeline that converts Wikipedia dump files into a Kindle-compatible `.
 
 ## Prerequisites
 
+- **Linux or macOS** — the pipeline uses Unix system commands (`sort`, `wc`) for memory-efficient processing of 7M+ records; Windows is not supported
 - **Python 3.10+**
 - **KindleGen** — download from Amazon or use the one bundled with Kindle Previewer 3
 - **~40 GB disk space** for raw downloads + intermediate data (less for smaller profiles)
@@ -53,6 +54,9 @@ Run individual stages: `make download`, `make parse`, `make merge`, `make html`,
 | **Standard** (default) | 100K | 400K | 500K | ~290 MB |
 | **Large** | 100K | 900K | 1M | ~580 MB |
 | **Full breadth** | 0 | 2M | 2M | ~800 MB |
+| **Full encyclopedia 10K** | 10K | all (~6.8M) | ~6.8M | ~2.7 GB |
+| **Full encyclopedia 50K** | 50K | all (~6.8M) | ~6.8M | ~2.8 GB |
+| **Full encyclopedia 100K** | 100K | all (~6.8M) | ~6.8M | ~2.9 GB |
 
 See [PROFILE_ESTIMATES.md](PROFILE_ESTIMATES.md) for detailed estimates and build history.
 

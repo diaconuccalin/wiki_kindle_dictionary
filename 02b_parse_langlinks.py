@@ -11,6 +11,7 @@ Output:
 import json
 import logging
 import subprocess
+import time
 from collections import defaultdict
 from pathlib import Path
 
@@ -144,7 +145,6 @@ def main():
 
     total_rows = int(subprocess.check_output(["wc", "-l", str(rows_tmp)]).split()[0])
     log.info("Sorting %d langlink rows by en_title ...", total_rows)
-    import time
     sorted_tmp = output_path.with_suffix(".sorted.tmp")
     sort_proc = subprocess.Popen(["sort", "-t\t", "-k1,1", str(rows_tmp), "-o", str(sorted_tmp)])
     t0 = time.time()

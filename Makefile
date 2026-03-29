@@ -27,7 +27,7 @@ parse-articles:
 parse-langlinks:
 	$(PYTHON) 02b_parse_langlinks.py $(PROFILE_FLAG) $(FLAGS)
 
-parse-redirects:
+parse-redirects: parse-langlinks
 	$(PYTHON) 02b2_parse_redirects.py $(PROFILE_FLAG) $(FLAGS)
 
 parse-pageviews:

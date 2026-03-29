@@ -58,14 +58,14 @@ def generate_entry(entry: dict) -> str:
     # All orth variants use value= so they are indexed but not rendered as visible text.
     # The title is already displayed as bold text in the content below.
     en_title = html.escape(entry["en_title"], quote=True)
-    lines.append(f"  <idx:orth value={en_title} />")
+    lines.append(f'  <idx:orth value="{en_title}" />')
 
     seen = {entry["en_title"].lower()}
     for variant in entry.get("orth_variants", []):
         key = variant.lower()
         if key not in seen:
             seen.add(key)
-            lines.append(f"  <idx:orth value={html.escape(variant, quote=True)} />")
+            lines.append(f'  <idx:orth value="{html.escape(variant, quote=True)}" />')
 
     # Abstract content
     abstract_text = re.sub(r"\(\s*[;,]?\s*\)", "", entry["abstract"])
@@ -167,13 +167,25 @@ def generate_cover(kindle_dir: Path, profile: str = "standard"):
 
         img = Image.new("RGB", (600, 800), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
-        # Try to use a default font, fall back to default bitmap font
-        try:
-            font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-            font_sub = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
-        except OSError:
-            font_title = ImageFont.load_default()
-            font_sub = font_title
+        # Try common font paths (Linux then macOS), fall back to bitmap font
+        _bold_candidates = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+            "/Library/Fonts/Arial Bold.ttf",                          # macOS (Office)
+            "/System/Library/Fonts/Helvetica.ttc",                    # macOS system
+        ]
+        _regular_candidates = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/Library/Fonts/Arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+        ]
+        font_title = next(
+            (ImageFont.truetype(p, 36) for p in _bold_candidates if Path(p).exists()),
+            ImageFont.load_default(),
+        )
+        font_sub = next(
+            (ImageFont.truetype(p, 20) for p in _regular_candidates if Path(p).exists()),
+            font_title,
+        )
         draw.text((300, 300), "Wikipedia\nDictionary", fill=(0, 0, 0), font=font_title, anchor="mm")
         draw.text((300, 450), "Kindle Edition", fill=(100, 100, 100), font=font_sub, anchor="mm")
         cover_path = kindle_dir / "cover.jpg"

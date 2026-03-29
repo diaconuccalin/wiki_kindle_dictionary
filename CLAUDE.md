@@ -64,6 +64,7 @@ The pipeline is a strict linear sequence of numbered scripts (`01_` through `05_
 
 ## Prerequisites
 
+- Linux or macOS only — stages 02a and 02b use Unix `sort` and `wc` via `subprocess` for OOM-safe processing of 7M+ records
 - Python 3.10+ (uses `X | None` union syntax)
 - KindleGen binary in PATH or common locations (checked by `05_compile.py:find_kindlegen()`)
 - ~40 GB disk for full pipeline downloads
