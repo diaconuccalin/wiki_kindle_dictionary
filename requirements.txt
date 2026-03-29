@@ -1,0 +1,4 @@
+mwparserfromhell
+requests
+Pillow
+tqdm
