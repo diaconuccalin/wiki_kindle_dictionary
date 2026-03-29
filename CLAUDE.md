@@ -10,7 +10,7 @@ A Python pipeline that converts Wikipedia dump files into Kindle-compatible `.mo
 
 ```bash
 # Full pipeline (download → parse → merge → html → compile)
-make all PROFILE=pocket          # 100K entries, ~58 MB
+make all PROFILE=pocket          # 100K entries, ~55 MB
 make all PROFILE=standard        # 500K entries (default)
 
 # Fast compression for development
@@ -56,7 +56,7 @@ The pipeline is a strict linear sequence of numbered scripts (`01_` through `05_
 ### Key design decisions
 
 - **Two-tier abstract system:** Top-ranked articles (by pageviews) get full lead sections ("long"), the rest get first-paragraph-only ("short"). Tier cutoffs are in `config.py:PROFILES`.
-- **Orth variants:** Each entry has multiple lookup forms: primary English title + redirect titles + interlanguage link titles (looked up for both the main article and each of its redirect pages). Capped at `max_orth_variants=30`. Filtered to Latin-only (U+0000–U+02FF) — KindleGen's index overflows with too many non-Latin characters (E25006 error).
+- **Orth variants:** Each entry has multiple lookup forms: primary English title + redirect titles + interlanguage link titles (looked up for both the main article and each of its redirect pages). Filtered to Latin-only (U+0000–U+02FF) to avoid KindleGen E25006 index overflow. Sorted by pageview count before capping so the most-searched spellings survive. Capped at `max_orth_variants=100`. All use `<idx:orth value=… />` (not text content) so they don't render as visible text — the title is shown via `<b>` in the content instead.
 - **Intermediate format:** All inter-stage data uses JSONL or TSV, written atomically via `.tmp` rename.
 - **Idempotent stages:** Stages skip if output already exists. Delete outputs to reprocess.
 - **External sort:** Stages that process 7M+ records use `subprocess` to call the system `sort` command rather than sorting in memory to avoid OOM kills.
@@ -73,7 +73,7 @@ The pipeline is a strict linear sequence of numbered scripts (`01_` through `05_
 
 | Profile | Long tier | Short tier | Total | Est. .mobi |
 |---|---|---|---|---|
-| pocket | 10K | 90K | 100K | ~58 MB |
+| pocket | 10K | 90K | 100K | ~55 MB |
 | compact | 50K | 200K | 250K | ~150 MB |
 | standard | 100K | 400K | 500K | ~290 MB |
 | large | 100K | 900K | 1M | ~580 MB |

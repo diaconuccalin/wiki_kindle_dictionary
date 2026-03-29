@@ -4,7 +4,7 @@ Estimates assume KindleGen flags: `-c2 -gen_ff_mobi7 -dont_append_source`
 
 | Profile | Long tier | Short tier | Total entries | Estimated .mobi | Actual .mobi | Avg bytes/entry | Built on |
 |---|---|---|---|---|---|---|---|
-| Pocket | 10K | 90K | 100K | ~58 MB | 57.7 MB | 577 | 2026-03-29 |
+| Pocket | 10K | 90K | 100K | ~55 MB | 55.0 MB | 550 | 2026-03-29 |
 | Compact | 50K | 200K | 250K | ~150 MB | — | — | — |
 | Standard | 100K | 400K | 500K | ~290 MB | — | — | — |
 | Large | 100K | 900K | 1M | ~580 MB | — | — | — |
@@ -35,3 +35,4 @@ compression (31.3% vs 35.3% of raw text). Larger profiles may compress slightly 
 | 2026-03-27 | pocket | 100K | — (avg ~12.5) | 121.9 MB | 89.9 MB | 11 | `-c2 -gen_ff_mobi7 -dont_append_source` |
 | 2026-03-27 | pocket | 100K | 1,248,818 (avg 12.5) | 120.5 MB | 88.9 MB | 11 | `-c2 -gen_ff_mobi7 -dont_append_source` |
 | 2026-03-29 | pocket | 100K | 1,683,665 (avg 16.8) | 134.6 MB | 57.7 MB | 10 | `-c2 -gen_ff_mobi7 -dont_append_source` |
+| 2026-03-29 | pocket | 100K | 1,683,665 (avg 16.8) | 134.4 MB | 55.0 MB | 11 | `-c2 -gen_ff_mobi7 -dont_append_source` |

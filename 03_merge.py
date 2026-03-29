@@ -285,7 +285,7 @@ def main():
     log.info("Skipped title collisions: %d", skipped_collisions)
     log.info("Estimated raw HTML size: %.1f MB", estimated_bytes / 1024 / 1024)
     log.info("Estimated .mobi size (with -c2 -dont_append_source): %.1f MB",
-             estimated_bytes * 0.43 / 1024 / 1024)
+             estimated_bytes * 0.41 / 1024 / 1024)
 
     # Write output
     log.info("Writing %d entries to %s ...", len(entries), output_path)
