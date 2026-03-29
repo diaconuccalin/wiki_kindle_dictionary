@@ -60,7 +60,7 @@ The pipeline is a strict linear sequence of numbered scripts (`01_` through `05_
 - **Intermediate format:** All inter-stage data uses JSONL or TSV, written atomically via `.tmp` rename.
 - **Idempotent stages:** Stages skip if output already exists. Delete outputs to reprocess.
 - **External sort:** Stages that process 7M+ records use `subprocess` to call the system `sort` command rather than sorting in memory to avoid OOM kills.
-- **KindleGen index size:** Dictionary indexes (word lookup tables) are large relative to text — final `.mobi` is ~43% of raw HTML (with `max_orth_variants=100`). Text compresses to ~31% but indexes scale linearly with total orth count and are largely uncompressed for fast random access. More orth variants actually improve compression by giving Huffdic more shared patterns to exploit.
+- **KindleGen index size:** Dictionary indexes (word lookup tables) are large relative to text — final `.mobi` is ~41% of raw HTML (with `max_orth_variants=100`). Text compresses to ~31% but indexes scale linearly with total orth count and are largely uncompressed for fast random access. More orth variants actually improve compression by giving Huffdic more shared patterns to exploit.
 
 ## Prerequisites
 
