@@ -61,7 +61,7 @@ class Config:
 
     @property
     def kindle_dir(self) -> Path:
-        return self.data_dir / "kindle"
+        return self.data_dir / "kindle" / self.profile
 
     @property
     def abstracts_path(self) -> Path:
@@ -85,7 +85,7 @@ class Config:
 
     @property
     def merged_path(self) -> Path:
-        return self.processed_dir / "merged.jsonl"
+        return self.processed_dir / f"merged_{self.profile}.jsonl"
 
     def ensure_dirs(self):
         """Create all necessary directories."""
