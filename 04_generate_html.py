@@ -55,20 +55,20 @@ def generate_entry(entry: dict) -> str:
     """Generate idx:entry HTML for a single dictionary entry."""
     lines = ['<idx:entry name="default" scriptable="yes">']
 
-    # Primary orth: English title
+    # All orth variants use value= so they are indexed but not rendered as visible text.
+    # The title is already displayed as bold text in the content below.
     en_title = html.escape(entry["en_title"], quote=True)
-    lines.append(f"  <idx:orth>{en_title}</idx:orth>")
+    lines.append(f"  <idx:orth value={en_title} />")
 
-    # Additional orth variants (redirects + interlanguage)
     seen = {entry["en_title"].lower()}
     for variant in entry.get("orth_variants", []):
         key = variant.lower()
         if key not in seen:
             seen.add(key)
-            lines.append(f"  <idx:orth>{html.escape(variant, quote=True)}</idx:orth>")
+            lines.append(f"  <idx:orth value={html.escape(variant, quote=True)} />")
 
     # Abstract content
-    abstract_text = entry["abstract"]
+    abstract_text = re.sub(r"\(\s*[;,]?\s*\)", "", entry["abstract"])
     tier = entry.get("tier", "short")
 
     if tier == "long":

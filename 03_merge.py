@@ -245,7 +245,7 @@ def main():
                 if foreign_title.lower() != title.lower() and is_kindlegen_safe(foreign_title):
                     orth_variants.append(foreign_title)
 
-        # Deduplicate and cap
+        # Deduplicate, sort by pageview count (most-searched first), then cap
         seen = {title.lower()}
         unique_orth = []
         for v in orth_variants:
@@ -253,6 +253,7 @@ def main():
             if key not in seen:
                 seen.add(key)
                 unique_orth.append(v)
+        unique_orth.sort(key=lambda v: pageviews.get(v, 0), reverse=True)
         # Cap at max (minus 1 for the primary English title)
         unique_orth = unique_orth[:cfg.max_orth_variants - 1]
         total_orth += len(unique_orth)
@@ -284,7 +285,7 @@ def main():
     log.info("Skipped title collisions: %d", skipped_collisions)
     log.info("Estimated raw HTML size: %.1f MB", estimated_bytes / 1024 / 1024)
     log.info("Estimated .mobi size (with -c2 -dont_append_source): %.1f MB",
-             estimated_bytes * 0.74 / 1024 / 1024)
+             estimated_bytes * 0.43 / 1024 / 1024)
 
     # Write output
     log.info("Writing %d entries to %s ...", len(entries), output_path)

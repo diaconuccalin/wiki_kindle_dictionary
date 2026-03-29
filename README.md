@@ -17,7 +17,7 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-# Build the Pocket profile (100K entries, ~90 MB .mobi)
+# Build the Pocket profile (100K entries, ~58 MB .mobi)
 make all PROFILE=pocket
 
 # Or run with fast compression during development
@@ -46,11 +46,11 @@ Run individual stages: `make download`, `make parse`, `make merge`, `make html`,
 
 | Profile | Long abstracts | Short abstracts | Total | Est. size |
 |---|---|---|---|---|
-| **Pocket** | 10K | 90K | 100K | ~90 MB |
-| **Compact** | 50K | 200K | 250K | ~270 MB |
-| **Standard** (default) | 100K | 400K | 500K | ~540 MB |
-| **Large** | 100K | 900K | 1M | ~900 MB |
-| **Full breadth** | 0 | 2M | 2M | ~1.4 GB |
+| **Pocket** | 10K | 90K | 100K | ~58 MB |
+| **Compact** | 50K | 200K | 250K | ~150 MB |
+| **Standard** (default) | 100K | 400K | 500K | ~290 MB |
+| **Large** | 100K | 900K | 1M | ~580 MB |
+| **Full breadth** | 0 | 2M | 2M | ~800 MB |
 
 See [PROFILE_ESTIMATES.md](PROFILE_ESTIMATES.md) for detailed estimates and build history.
 

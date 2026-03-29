@@ -24,7 +24,7 @@ class Config:
 
     max_short_abstract_length: int = 1000
     max_abstract_length: int | None = None
-    max_orth_variants: int = 30
+    max_orth_variants: int = 100
     include_redirects: bool = True
 
     include_languages: list[str] | None = None  # None = all
