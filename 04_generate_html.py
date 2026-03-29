@@ -184,7 +184,6 @@ def generate_cover(kindle_dir: Path, profile: str = "standard"):
         log.warning("Pillow not installed, creating minimal cover placeholder")
         cover_path = kindle_dir / "cover.jpg"
         # Minimal JPEG bytes (1x1 white pixel)
-        import struct
         cover_path.write_bytes(
             b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00'
             b'\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t'
