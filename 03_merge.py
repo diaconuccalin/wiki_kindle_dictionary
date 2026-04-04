@@ -205,7 +205,7 @@ def main():
         art = abstracts[title]
 
         # Determine tier
-        if rank < long_tier:
+        if long_tier is None or rank < long_tier:
             tier = "long"
             abstract = art["long"]
             long_count += 1
