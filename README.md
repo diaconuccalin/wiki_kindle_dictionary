@@ -55,7 +55,7 @@ Run individual stages: `make download`, `make parse`, `make merge`, `make html`,
 
 | Profile | Abstracts | Total entries | Output |
 |---|---|---|---|
-| **Pocket** (default) | 100K long | 100K | 1 .mobi (~55 MB) |
+| **Pocket** (default) | 100K long | 100K | 1 .mobi (~114 MB) |
 | **Complete** | all long | ~6.8M | 68 .mobi volumes |
 
 The **Complete** profile includes every Wikipedia article with full lead-section abstracts, split into 68 alphabetical volumes (see [ENCYCLOPEDIA_VOLUMES.md](ENCYCLOPEDIA_VOLUMES.md) for the volume ranges). Each volume is titled "Wikipedia Dictionary (Complete) - Start-End" and has a cover image with the range overlaid.

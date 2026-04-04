@@ -147,10 +147,56 @@ def compile_complete(cfg: Config):
         output_path = cfg.output_dir / output_name
         shutil.copy2(mobi_path, output_path)
         log.info("Copied to: %s (%.1f MB)", output_path, mobi_size / 1024 / 1024)
+
+        # Count entries from HTML content files
+        entry_count = count_entries_in_html(vol_dir)
+        update_encyclopedia_volumes(vol_num, entry_count, mobi_size)
+
         success_count += 1
 
     log.info("Compiled %d/%d volumes", success_count, len(vol_dirs))
     return success_count > 0
+
+
+def count_entries_in_html(kindle_dir: Path) -> int:
+    """Count idx:entry tags across all content HTML files in a directory."""
+    count = 0
+    for html_file in sorted(kindle_dir.glob("content_*.html")):
+        with open(html_file, "r", encoding="utf-8") as f:
+            for line in f:
+                if '<idx:entry' in line:
+                    count += 1
+    return count
+
+
+def update_encyclopedia_volumes(vol_num: int, entry_count: int, mobi_size: int):
+    """Update the Articles and .mobi size columns in ENCYCLOPEDIA_VOLUMES.md."""
+    volumes_path = Path("ENCYCLOPEDIA_VOLUMES.md")
+    if not volumes_path.exists():
+        return
+
+    size_mb = mobi_size / 1024 / 1024
+    articles_str = f"{entry_count:,}"
+    size_str = f"{size_mb:.1f} MB"
+
+    content = volumes_path.read_text(encoding="utf-8")
+    lines = content.splitlines(keepends=True)
+
+    import re
+    for i, line in enumerate(lines):
+        if not line.startswith("|"):
+            continue
+        cols = [c.strip() for c in line.split("|")]
+        # cols[0] is empty (before first |), cols[1] is #
+        if len(cols) >= 8 and cols[1] == str(vol_num):
+            cols[5] = articles_str
+            cols[6] = size_str
+            lines[i] = "| " + " | ".join(cols[1:-1]) + " |\n"
+            break
+
+    volumes_path.write_text("".join(lines), encoding="utf-8")
+    log.info("Updated ENCYCLOPEDIA_VOLUMES.md: vol %d — %s articles, %s",
+             vol_num, articles_str, size_str)
 
 
 PROFILE_DISPLAY_NAMES = {
