@@ -314,41 +314,56 @@ def generate_cover(kindle_dir: Path, profile: str = "pocket",
 
 
 def generate_complete(cfg: Config):
-    """Generate HTML for all complete encyclopedia volumes."""
+    """Generate HTML for complete encyclopedia volumes.
+
+    Two-pass approach to avoid loading all 7M entries into memory:
+    Pass 1: stream titles only to compute volume assignments (~500 MB)
+    Pass 2: stream entries, loading only the target volume(s) into memory
+    """
     merged_path = cfg.merged_path
     if not merged_path.exists():
         log.error("Merged data not found at %s. Run 03_merge.py first.", merged_path)
         return
 
-    # Load all entries
-    log.info("Loading entries from %s ...", merged_path)
-    entries = []
+    # Pass 1: read titles only and assign volumes
+    log.info("Pass 1: reading titles for volume assignment...")
+    titles = []
     with open(merged_path, "r", encoding="utf-8") as f:
         for line in f:
-            entries.append(json.loads(line))
-    log.info("Loaded %d entries", len(entries))
+            if not line.strip():
+                continue
+            obj = json.loads(line)
+            titles.append(obj["en_title"])
+    log.info("Read %d titles", len(titles))
 
-    # Assign volumes
-    titles = [e["en_title"] for e in entries]
     vol_assignments = assign_volumes(titles)
+    del titles
 
-    # Group entries by volume
+    # Determine which volumes to build
+    if cfg.volume is not None:
+        volumes_to_build = {cfg.volume}
+    else:
+        volumes_to_build = set(range(1, 69))
+
+    # Pass 2: stream entries, collect only those in target volumes
+    log.info("Pass 2: loading entries for %d volume(s)...", len(volumes_to_build))
     vol_entries: dict[int, list] = defaultdict(list)
-    for entry in entries:
-        vol_num = vol_assignments[entry["en_title"]]
-        vol_entries[vol_num].append(entry)
+    with open(merged_path, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            entry = json.loads(line)
+            vol_num = vol_assignments[entry["en_title"]]
+            if vol_num in volumes_to_build:
+                vol_entries[vol_num].append(entry)
+
+    del vol_assignments
 
     # Sort entries within each volume alphabetically
     for vol_num in vol_entries:
         vol_entries[vol_num].sort(key=lambda e: sort_key(e["en_title"]))
 
-    # Determine which volumes to build
-    if cfg.volume is not None:
-        volumes_to_build = [cfg.volume]
-    else:
-        volumes_to_build = list(range(1, 69))
-
-    for vol_num in volumes_to_build:
+    for vol_num in sorted(volumes_to_build):
         vol_info = get_volume(vol_num)
         entries_for_vol = vol_entries.get(vol_num, [])
 
