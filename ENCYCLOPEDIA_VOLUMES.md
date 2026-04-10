@@ -11,17 +11,17 @@ The "Start" and "End" column should be inclusive (that volume should include all
 | # | Label | Start | End | Articles | .mobi size | Notes |
 |---|-------|-------|-----|----------|------------|-------|
 | 1 | AA – AJ | AA | AJ | 123,585 | 39.7 MB |  |
-| 2 | AK – AL | AK | AL | — | — | |
-| 3 | AM – ANS | AM | ANS | — | — | |
-| 4 | ANT – AR | ANT | AR | — | — | Includes all non-letter titles sorting in this range |
-| 5 | AS – AZ | AS | AZ | — | — | Includes all non-letter titles sorting in this range |
-| 6 | BA – BD | BA | BD | — | — | |
-| 7 | BE – BI | BE | BI | — | — | |
-| 8 | BJ – BRE | BJ | BRE | — | — | |
-| 9 | BRF – CAM | BRF | CAM | — | — | Includes all B-starting titles with non-letter on second position. |
-| 10 | CAN – CG | CAN | CG | — | — | |
-| 11 | CHA – CHO | CHA | CHO | — | — | |
-| 12 | CHR – COL | CHR | COL | — | — | |
+| 2 | AK – AL | AK | AL | 106,136 | 32.8 MB |  |
+| 3 | AM – ANS | AM | ANS | 97,020 | 29.6 MB |  |
+| 4 | ANT – AR | ANT | AR | 90,907 | 31.7 MB | Includes all non-letter titles sorting in this range |
+| 5 | AS – AZ | AS | AZ | 82,276 | 29.6 MB | Includes all non-letter titles sorting in this range |
+| 6 | BA – BD | BA | BD | 91,142 | 32.3 MB |  |
+| 7 | BE – BI | BE | BI | 105,215 | 34.6 MB |  |
+| 8 | BJ – BRE | BJ | BRE | 95,551 | 32.2 MB |  |
+| 9 | BRF – CAM | BRF | CAM | 111,936 | 36.1 MB | Includes all B-starting titles with non-letter on second position. |
+| 10 | CAN – CG | CAN | CG | 100,098 | 35.8 MB |  |
+| 11 | CHA – CHO | CHA | CHO | 88,550 | 29.4 MB |  |
+| 12 | CHR – COL | CHR | COL | 107,658 | 36.8 MB |  |
 | 13 | COM – CT | COM | CT | — | — | |
 | 14 | CU – DA | CU | DA | — | — | |
 | 15 | DE – DI | DE | DI | — | — | |
