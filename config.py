@@ -142,6 +142,8 @@ class Config:
         if args.short_tier is not None:
             cfg.short_tier = args.short_tier
         if args.volume is not None:
+            if not 1 <= args.volume <= 68:
+                parser.error("--volume must be an integer between 1 and 68")
             cfg.volume = args.volume
         if args.test:
             cfg.test_mode = True
