@@ -60,8 +60,6 @@ Run individual stages: `make download`, `make parse`, `make merge`, `make html`,
 
 The **Complete** profile includes every Wikipedia article with full lead-section abstracts, split into 68 alphabetical volumes (see [ENCYCLOPEDIA_VOLUMES.md](ENCYCLOPEDIA_VOLUMES.md) for the volume ranges). Each volume is titled "Wikipedia Dictionary (Complete) - Start-End" and has a cover image with the range overlaid.
 
-See [PROFILE_ESTIMATES.md](PROFILE_ESTIMATES.md) for detailed estimates and build history.
-
 ## Installing on Kindle
 
 1. Connect Kindle via USB
