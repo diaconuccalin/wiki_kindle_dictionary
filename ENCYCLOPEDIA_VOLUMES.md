@@ -70,13 +70,13 @@ The "Start" and "End" column should be inclusive (that volume should include all
 | 58 | TO – TU | TO | TU | 111,201 | 37.0 MB |  |
 | 59 | TW – VA | TW | VA | 117,626 | 46.0 MB |  |
 | 60 | VE – WA | VE | WA | 129,467 | 43.7 MB |  |
-| 61 | WE – WI | WE | WI | — | — | |
-| 62 | WO – YO | WO | YO | — | — | |
-| 63 | YU – Z | YU | Z | — | — | |
-| 64 | 1… (first half) | 1 (first half) | — | — | — | Digit-one titles, first half alphabetically |
-| 65 | 1… (second half) | 1 (second half) | — | — | — | Digit-one titles, second half alphabetically |
-| 66 | 2… (first half) | 2 (first half) | — | — | — | Digit-two titles, first half alphabetically |
-| 67 | 2… (second half) | 2 (second half) | — | — | — | Digit-two titles, second half alphabetically |
-| 68 | Special characters | — | — | — | — | All remaining non-letter titles |
+| 61 | WE – WI | WE | WI | 110,161 | 36.8 MB |  |
+| 62 | WO – YO | WO | YO | 90,472 | 29.0 MB |  |
+| 63 | YU – Z | YU | Z | 82,324 | 23.6 MB |  |
+| 64 | 1… (first half) | 1 (first half) | — | 91,007 | 33.9 MB | Digit-one titles, first half alphabetically |
+| 65 | 1… (second half) | 1 (second half) | — | 91,008 | 36.0 MB | Digit-one titles, second half alphabetically |
+| 66 | 2… (first half) | 2 (first half) | — | 109,877 | 45.8 MB | Digit-two titles, first half alphabetically |
+| 67 | 2… (second half) | 2 (second half) | — | 109,878 | 41.2 MB | Digit-two titles, second half alphabetically |
+| 68 | Special characters | — | — | 29,887 | 12.3 MB | All remaining non-letter titles |
 
 **Total: 68 volumes**
