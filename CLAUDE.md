@@ -80,8 +80,6 @@ The pipeline is a strict linear sequence of numbered scripts (`01_` through `05_
 
 The complete profile splits all articles into 68 alphabetical volumes (defined in `ENCYCLOPEDIA_VOLUMES.md` / `volumes.py`). Each volume gets a title like "Wikipedia Dictionary (Complete) - AA-AJ" and a cover with the range overlaid on `img/complete.png`.
 
-See `PROFILE_ESTIMATES.md` for actual measured sizes and build history.
-
 ## Cover images
 
 Place a PNG in `img/<profile>.png` to use a custom cover for that profile. For the complete profile, `img/complete.png` is used as the base and the volume range is overlaid as white text. If no image is found, a plain white cover is generated programmatically (requires Pillow).
