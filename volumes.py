@@ -4,7 +4,6 @@ Encodes the 68 volumes from ENCYCLOPEDIA_VOLUMES.md and provides
 title-to-volume assignment using bisect on start-key boundaries.
 """
 
-import re
 from bisect import bisect_right
 
 # Letter-based volumes (1-63): each defined by (start_prefix, end_prefix, label).
