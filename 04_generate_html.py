@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from config import Config
-from volumes import VOLUMES, assign_volumes, get_volume, sort_key
+from volumes import assign_volumes, get_volume, sort_key
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
