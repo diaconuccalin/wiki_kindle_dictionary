@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-# Build the Pocket profile (100K entries, ~55 MB .mobi)
+# Build the Pocket profile (100K entries, ~114 MB .mobi)
 make all
 
 # Or run with fast compression during development
