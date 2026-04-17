@@ -9,7 +9,7 @@ A Python pipeline that converts Wikipedia dump files into a Kindle-compatible `.
 - **Linux or macOS** — the pipeline uses Unix system commands (`sort`, `wc`) for memory-efficient processing of 7M+ records; Windows is not supported
 - **Python 3.10+**
 - **KindleGen** — download from Amazon or use the one bundled with Kindle Previewer 3
-- **~40 GB disk space** for raw downloads + intermediate data (less for smaller profiles)
+- **~40 GB disk space** for raw downloads + intermediate data (less for the Pocket profile)
 
 Install Python dependencies:
 
@@ -20,14 +20,20 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-# Build the Pocket profile (100K entries, ~55 MB .mobi)
-make all PROFILE=pocket
+# Build the Pocket profile (100K entries, ~114 MB .mobi)
+make all
 
 # Or run with fast compression during development
-make all PROFILE=pocket FAST=1
+make all FAST=1
 
 # Test mode: process only ~1000 articles for quick validation
 make test
+
+# Build the Complete encyclopedia (all articles, 68 volumes)
+make complete
+
+# Build a single Complete volume
+make complete VOLUME=1
 ```
 
 ## Pipeline Stages
@@ -47,31 +53,21 @@ Run individual stages: `make download`, `make parse`, `make merge`, `make html`,
 
 ## Profiles
 
-| Profile | Long abstracts | Short abstracts | Total | Est. size |
-|---|---|---|---|---|
-| **Pocket** | 10K | 90K | 100K | ~55 MB |
-| **Compact** | 50K | 200K | 250K | ~150 MB |
-| **Standard** (default) | 100K | 400K | 500K | ~290 MB |
-| **Large** | 100K | 900K | 1M | ~580 MB |
-| **Full breadth** | 0 | 2M | 2M | ~800 MB |
-| **Full encyclopedia 10K** | 10K | all (~6.8M) | ~6.8M | ~2.7 GB |
-| **Full encyclopedia 50K** | 50K | all (~6.8M) | ~6.8M | ~2.8 GB |
-| **Full encyclopedia 100K** | 100K | all (~6.8M) | ~6.8M | ~2.9 GB |
+| Profile | Abstracts | Total entries | Output |
+|---|---|---|---|
+| **Pocket** (default) | 100K long | 100K | 1 .mobi (~114 MB) |
+| **Complete** | all long | ~6.8M | 68 .mobi volumes |
 
-See [PROFILE_ESTIMATES.md](PROFILE_ESTIMATES.md) for detailed estimates and build history.
-
-## Custom Profiles
-
-```bash
-python 03_merge.py --profile custom --long-tier 75000 --short-tier 300000
-```
+The **Complete** profile includes every Wikipedia article with full lead-section abstracts, split into 68 alphabetical volumes (see [ENCYCLOPEDIA_VOLUMES.md](ENCYCLOPEDIA_VOLUMES.md) for the volume ranges). Each volume is titled "Wikipedia Dictionary (Complete) - Start-End" and has a cover image with the range overlaid.
 
 ## Installing on Kindle
 
 1. Connect Kindle via USB
-2. Copy the `.mobi` file to the `documents/dictionaries/` folder
+2. Copy the `.mobi` file(s) to the `documents/dictionaries/` folder
 3. On Kindle: Settings → Language & Dictionaries → Dictionaries
 4. Select "Wikipedia Dictionary" as your default dictionary
+
+For the Complete profile, copy all 68 volume `.mobi` files. Kindle will use whichever volume contains the word you look up.
 
 ## Orth variant filtering
 

@@ -5,22 +5,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 PROFILES = {
-    "pocket":                {"long_tier": 10_000,  "short_tier": 90_000},
-    "compact":               {"long_tier": 50_000,  "short_tier": 200_000},
-    "standard":              {"long_tier": 100_000, "short_tier": 400_000},
-    "large":                 {"long_tier": 100_000, "short_tier": 900_000},
-    "full_breadth":          {"long_tier": 0,       "short_tier": 2_000_000},
-    "full_encyclopedia_10k": {"long_tier": 10_000,  "short_tier": None},
-    "full_encyclopedia_50k": {"long_tier": 50_000,  "short_tier": None},
-    "full_encyclopedia_100k":{"long_tier": 100_000, "short_tier": None},
+    "pocket":   {"long_tier": 100_000, "short_tier": 0, "max_orth_variants": 100},
+    "complete": {"long_tier": None,    "short_tier": 0, "max_orth_variants": 75},
 }
 
 
 @dataclass
 class Config:
-    profile: str = "standard"
-    long_tier: int = 100_000
-    short_tier: int | None = 400_000
+    profile: str = "pocket"
+    long_tier: int | None = 100_000
+    short_tier: int | None = 0
 
     max_short_abstract_length: int = 1000
     max_abstract_length: int | None = None
@@ -41,13 +35,15 @@ class Config:
     data_dir: Path = Path("data")
     output_dir: Path = Path("output")
 
+    volume: int | None = None  # Volume number for complete profile (1-68)
+
     test_mode: bool = False
     test_entries: int = 1000
 
     @property
     def total_entries(self) -> int | None:
-        """Total entries for this profile, or None for full encyclopedia."""
-        if self.short_tier is None:
+        """Total entries for this profile, or None for all articles."""
+        if self.long_tier is None or self.short_tier is None:
             return None
         return self.long_tier + self.short_tier
 
@@ -61,6 +57,8 @@ class Config:
 
     @property
     def kindle_dir(self) -> Path:
+        if self.profile == "complete" and self.volume is not None:
+            return self.data_dir / "kindle" / "complete" / f"vol_{self.volume:02d}"
         return self.data_dir / "kindle" / self.profile
 
     @property
@@ -99,9 +97,9 @@ class Config:
             description="Wiki Kindle Dictionary pipeline configuration"
         )
         parser.add_argument(
-            "--profile", default="standard",
+            "--profile", default="pocket",
             choices=list(PROFILES) + ["custom"],
-            help="Dictionary size profile (default: standard)"
+            help="Dictionary size profile (default: pocket)"
         )
         parser.add_argument("--long-tier", type=int, default=None,
                             help="Number of articles getting long abstracts")
@@ -119,6 +117,8 @@ class Config:
                             help="Entries per HTML content file (default: 10000)")
         parser.add_argument("--pageview-months", type=int, default=3,
                             help="Number of recent months of pageview data (default: 3)")
+        parser.add_argument("--volume", type=int, default=None,
+                            help="Volume number for complete profile (1-68)")
 
         args = parser.parse_args(extra_args)
 
@@ -134,12 +134,17 @@ class Config:
             preset = PROFILES[args.profile]
             cfg.long_tier = preset["long_tier"]
             cfg.short_tier = preset["short_tier"]
+            cfg.max_orth_variants = preset["max_orth_variants"]
 
         # CLI overrides
         if args.long_tier is not None:
             cfg.long_tier = args.long_tier
         if args.short_tier is not None:
             cfg.short_tier = args.short_tier
+        if args.volume is not None:
+            if not 1 <= args.volume <= 68:
+                parser.error("--volume must be an integer between 1 and 68")
+            cfg.volume = args.volume
         if args.test:
             cfg.test_mode = True
         if args.fast:
